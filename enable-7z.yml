@@ -1,0 +1,16 @@
+- name: Install 7z
+  hosts: all
+  vars: 
+     PRODIR: 'C:\\Program Files (x86)\\7-Zip'
+
+  tasks:
+    - name: Download 7z 
+      win_get_url:
+        url: 'http://192.168.2.2/cdn/windows/7z1604-x64.exe'
+        dest: 'C:\Users\Administrator\Downloads\7z1604-x64.exe'
+
+    - name: Install 7z
+      win_command: 'C:\Users\Administrator\Downloads\7z1604-x64.exe /S /D="{{ PRODIR }}"'
+
+
+
