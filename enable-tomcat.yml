@@ -1,0 +1,30 @@
+- name: Install JRE Tomcat
+  hosts: all
+
+  tasks:
+    - name: Download JRE 
+      win_get_url:
+        url: 'http://192.168.2.2/cdn/windows/jre-8u131-windows-x64.exe'
+        dest: 'C:\Users\Administrator\Downloads\jre-8u131-windows-x64.exe'
+
+    - name: Install JRE
+      win_command: 'C:\Users\Administrator\Downloads\jre-8u131-windows-x64.exe /s INSTALLDIR="c:\jre" /log install.log'
+
+    - name: Download the Apache Tomcat installer
+      win_get_url:
+        url: 'http://192.168.2.2/cdn/windows/apache-tomcat-7.0.77.exe'
+        dest: 'C:\Users\Administrator\Downloads\apache-tomcat-7.0.77.exe'
+
+    - name: Install Tomcat7
+      win_command: 'C:\Users\Administrator\Downloads\apache-tomcat-7.0.77.exe /S /D=C:\Tomcat'
+
+    - name: Enable Tomcat7 Service
+      win_command: 'c:\Tomcat\bin\Tomcat7.exe //US/tomcat7 --Startup="Auto"'
+
+    - name: Disable Firewall
+      win_command: 'NetSh Advfirewall set allprofiles state off'
+
+    - name: Start tomcat7
+      win_command: 'c:\Tomcat\bin\Tomcat7.exe start'
+
+
