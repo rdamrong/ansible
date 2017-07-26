@@ -1,0 +1,59 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Read the vault values
+    include_vars:
+      file: vault.yml
+    no_log: True
+  - name: Ensure the SSH Key is on Digital Ocean
+    digital_ocean:
+      state: present
+      command: ssh
+      name: 'MY OS X' 
+      ssh_pub_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAskG61cAsh+H7vWE7x2GxB3H6grixQZYDoglkXu2dCowW0fIichXb35H76G8SMi2Pmwvcky8dFiLq4A481RbobTRUcP4O9CYLOnPy60iyBxtupnv7iIWZfiSIRnetN9MopeZn9tbsdAgDpOLSsn42M0AZymeWbOlavu51pGZSp57b6xmkjpXDCuXl9RU4nmIHAQ733NtsDy95hjpWFHVUZbymCou5m9tSZdbKukpIhlVPi07Ol+YCI/vinW8XSi8chTbGBfeL1dHaaNP95E3ZlJTB1Je7F/nio2hxf02+jgDAXmKvI20g918SWXl7JJB6qT084mLo2vESCumz0JGW8w== root@master.test.com'
+      api_token: '{{ do_token_vault }}'
+    register: ssh_key
+  - name: Ensure the ws and db servers are present
+    digital_ocean:
+      state: present
+      ssh_key_ids: '{{ ssh_key.ssh_key.id }}'
+      name: '{{ item }}'
+      api_token: '{{ do_token_vault }}'
+      size_id: 2gb 
+      region_id: sgp1 
+      image_id: centos-7-x64
+      unique_name: True
+    with_items: "{{ groups['all'] }}"
+    register: droplets
+
+  - debug: msg="IP is {{ item.droplet.ip_address }}"
+    with_items: '{{ droplets.results }}'
+
+  - name: Add hostname to DNS Server
+    digital_ocean_domain:
+      state: present
+      name: "{{ item.item }}"
+      ip: "{{ item.droplet.ip_address }}"
+      api_token: '{{ do_token_vault }}'
+    with_items: '{{ droplets.results }}'
+   
+
+  - add_host:
+      name: "{{ item.droplet.ip_address }}"
+      groups: wp
+    with_items: '{{ droplets.results }}'
+
+  - local_action: wait_for port=22 host="{{ item.droplet.ip_address }}" search_regex=OpenSSH delay=10
+    with_items: '{{ droplets.results }}'
+#  - name: Waiting 
+#    pause: seconds=60
+
+- hosts: wp
+  remote_user: root
+
+  roles:
+    - common
+    - mariadb
+    - nginx
+    - php-fpm
+    - wordpress
