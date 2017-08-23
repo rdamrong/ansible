@@ -1,0 +1,62 @@
+---
+- name: create Ansible Control Node
+  hosts: localhost
+  vars:
+    servera: myserver
+    template:  "~/Documents/centos7-template.ova"
+  tasks:
+  - name: Check Running VMs
+    shell: 'vboxmanage list runningvms|grep {{ servera }}|wc -l'
+    register: isRunningVMs
+
+  - name: Stoped VMs
+    command: 'vboxmanage controlvm {{ servera }} poweroff soft'
+    when: isRunningVMs.stdout == "1"
+
+  - name: Check Existing VMs
+    shell: 'vboxmanage list vms|grep {{ servera }}|wc -l'
+    register: isFoundVMs
+
+#  - debug: var=isFoundVMs
+  
+  - name: Deleted VMs
+    command: 'vboxmanage unregistervm {{ servera }} --delete'
+    when: isFoundVMs.stdout == "1"
+
+  - name: Create Virtual Machine
+    command: "vboxmanage import --vsys 0 --vmname {{ servera }} {{ template }}"
+
+  - name: Started Virtual Machine
+    command: "vboxmanage startvm {{ servera }} -type headless"
+     
+  - pause: seconds=30
+  - name: Get IP
+    shell: 'VBoxManage guestproperty enumerate {{ servera }} | grep IP | grep -o -w -P -e "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"'
+    register: result
+
+#  - debug: var=result
+  - debug: msg='VMs IP {{ result.stdout_lines }}'
+
+  - name: Add Host to inventory
+    add_host:
+      name: '{{ result.stdout }}'
+      groups: ansible
+
+- hosts: ansible
+  remote_user: root
+
+  tasks:
+  - name: Install EPEL
+    yum:
+      name: epel-release
+      state: present
+  - name: install ansible
+    yum: 
+      name: ansible
+      state: present
+
+  - name: verfity ansible version
+    command: ansible --version
+    register: result
+
+  - debug: var=result  
