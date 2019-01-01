@@ -10,7 +10,7 @@
       state: present
       command: ssh
       name: 'MY OS X' 
-      ssh_pub_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAskG61cAsh+H7vWE7x2GxB3H6grixQZYDoglkXu2dCowW0fIichXb35H76G8SMi2Pmwvcky8dFiLq4A481RbobTRUcP4O9CYLOnPy60iyBxtupnv7iIWZfiSIRnetN9MopeZn9tbsdAgDpOLSsn42M0AZymeWbOlavu51pGZSp57b6xmkjpXDCuXl9RU4nmIHAQ733NtsDy95hjpWFHVUZbymCou5m9tSZdbKukpIhlVPi07Ol+YCI/vinW8XSi8chTbGBfeL1dHaaNP95E3ZlJTB1Je7F/nio2hxf02+jgDAXmKvI20g918SWXl7JJB6qT084mLo2vESCumz0JGW8w== root@master.test.com'
+      ssh_pub_key: ''
       api_token: '{{ do_token_vault }}'
     register: ssh_key
   - name: Ensure the ws and db servers are present
